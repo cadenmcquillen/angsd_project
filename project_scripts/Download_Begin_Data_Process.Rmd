@@ -1,0 +1,269 @@
+---
+title: "Download and Begin Processing Data"
+author: "Caden McQuillen"
+date: '2023-02-15'
+output:
+  html_document:
+    toc: yes
+---
+
+## Dataset Details
+1. Data is from GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE151195
+2. Publication: Lan MY, Hsu YB, Lan MC, Chen JP, Lu YJ. Polyethylene Glycol-Coated Graphene Oxide Loaded with Erlotinib as an Effective Therapeutic Agent for Treating Nasopharyngeal Cancer Cells. Int J Nanomedicine. 2020 Oct 7;15:7569-7582. doi: 10.2147/IJN.S265437. PMID: 33116488; PMCID: PMC7548234.
+3. Who generated data: Taipei Veterans General Hospital, Taipei, Taiwan
+    + Lan M, Hsu Y, Lan M, Lu Y, Chen J 
+4. RNA extraction: Total RNA, RNeasy Mini Kit
+5. Library Preparation: Unstranded, unclear if ribo depleted or poly-A selected from paper's methods
+6. Cell line: Nasopharyngeal Carcinoma cells derived from tumors of Chinese patients (NPC)
+7. Sequencing platform:  BGISEQ-500 system by Tri-I Biotech
+
+## Download Fastq files
+```{bash, eval = FALSE}
+
+#On cluster
+cd /athena/angsd/scratch/cnm4001
+mkdir NPC_fastq_data
+
+#On local machine copy files over to cluster
+scp /Users/Caden/Downloads/SRR_Acc_List.txt cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_fastq_data
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=download
+#SBATCH --time=06:00:00 # HH/MM/SS
+#SBATCH --mem=6G
+
+
+
+cd /athena/angsd/scratch/cnm4001/NPC_fastq_data
+
+while read ID; do
+ wget "https://trace.ncbi.nlm.nih.gov/Traces/sra-reads-be/fastq?acc=${ID}" -O ${ID}.fastq.gz
+
+done < SRR_ACC_List.txt
+```
+
+fastqc and multiqc
+
+```{bash, eval = FALSE}
+
+#fastqc script
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes =1
+#SBATCH --ntasks =1
+#SBATCH --job -name=Fastqc
+#SBATCH --time =01:00:00 # HH/MM/SS
+#SBATCH --mem=6G
+
+
+cd /athena/angsd/scratch/cnm4001/NPC_fastq_data/
+mamba activate angsd
+
+for file in *; do
+  fastqc $file --extract;
+done
+
+#On interactive session
+srun -n1 --pty --partition=angsd_class --mem=4G bash -i
+cd /athena/angsd/scratch/cnm4001/NPC_fastq_data
+mamba activate multiqc
+multiqc .
+
+#On local machine, copy html report from cluster to local machine
+scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_fastq_data/multiqc_report.html .
+
+```
+![MultiQC.](/Users/Caden/Desktop/angsd/project/Multiqc_perbase.png)
+![MultiQC2.](/Users/Caden/Desktop/angsd/project/Multiqc_checks.png)
+
+Examine fastq files
+
+```{bash, eval=FALSE}
+zcat SRR11849597.fastq.gz | head
+@SRR11849597.1.1 1 length=50
+CTGCCCTGGGCGGGCTTGCACCCCCACACCCAAGTGAGCGGCCTGCTCAC
++SRR11849597.1.1 1 length=50
+??????????????????????????????????????????????????
+@SRR11849597.2.1 2 length=50
+CTATTTTATATTATGACTGCTTTTTAAGAAATTTTTGTTTATGGATCTGA
++SRR11849597.2.1 2 length=50
+??????????????????????????????????????????????????
+@SRR11849597.3.1 3 length=50
+CCAAGACATACAGCAGCCCCCACTGACCCCGCAGATGGCCCGGTGTAGGC
+```
+
+Does not appear to be an issue with downloading the fastq files but something odd with the fastq files themselves as the fastq files on SRA are showing the same phred score for every base. Not sure why this is, maybe it is a product of the sequencing technology but I couldn't find information supporting this. 
+
+![SRA Screenshot.](/Users/Caden/Desktop/angsd/project/SRA_screenshot.png)
+
+
+## Index and Align
+
+Download human genome
+```{bash, eval=FALSE}
+
+cd /athena/angsd/scratch/cnm4001
+mkdir hg38
+
+
+#On local copy over gtf file
+scp /Users/Caden/Downloads/hg38.gencodev41.gtf cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/hg38
+
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=download
+#SBATCH --time=02:00:00 # HH/MM/SS
+#SBATCH --mem=8G
+
+cd /athena/angsd/scratch/cnm4001/hg38
+wget 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz' -O hg38.fa.gz
+
+
+
+
+#STAR needs unzipped genome file
+gunzip hg38.fa.gz
+
+```
+Index hg38 genome
+```{bash, eval=FALSE}
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=index
+#SBATCH --time=6:00:00 # HH/MM/SS
+#SBATCH --mem=64G
+
+
+cd /athena/angsd/scratch/cnm4001/hg38
+mamba activate angsd
+
+STAR --runMode genomeGenerate \
+  --runThreadN 1 \
+  --genomeDir hg38_STARindex \
+  --genomeFastaFiles /athena/angsd/scratch/cnm4001/hg38/hg38.fa \
+  --sjdbGTFfile /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev41.gtf \
+  --sjdbOverhang 49
+
+```
+
+Align fastq with STAR
+```{bash, eval = FALSE}
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=Align
+#SBATCH --time=6:00:00 # HH/MM/SS
+#SBATCH --mem=30G
+
+cd /athena/angsd/scratch/cnm4001/
+mamba activate angsd
+
+
+for index in 597 598 599 600 601 602; do
+
+
+  STAR --runMode alignReads \
+    --runThreadN 1 \
+    --genomeDir  hg38/hg38_STARindex \
+    --readFilesIn  NPC_fastq_data/SRR11849${index}.fastq.gz\
+    --readFilesCommand zcat \
+    --outFileNamePrefix NPC_bams/SRR11849${index}. \
+    --outSAMtype BAM SortedByCoordinate ;
+    
+  samtools index /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849${index}.Aligned.sortedByCoord.out.bam
+done
+
+```
+
+Multiqc on STAR output
+```{bash, eval = FALSE}
+srun -n1 --pty --partition=angsd_class --mem=4G bash -i
+cd /athena/angsd/scratch/cnm4001/NPC_bams
+mamba activate multiqc
+multiqc .
+
+#on local machine
+scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_bams/multiqc_report.html  .
+```
+![Multiqc Alignment Scores.](/Users/Caden/Desktop/angsd/project/STAR_alignment_scores.png)
+
+
+
+## Alignment QC
+```{bash, eval=FALSE}
+cd /athena/angsd/scratch/cnm4001/
+mkdir NPC_alignmentQC
+cd NPC_alignmentQC
+
+
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=align_qc
+#SBATCH --time=03:00:00 # HH/MM/SS
+#SBATCH --mem=20G
+
+cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC
+for index in 597 598 599 600 601 602; do
+  mkdir SRR11849${index}_alignmentQC
+done
+
+cd /athena/angsd/scratch/cnm4001/NPC_bams
+mamba activate qorts
+
+for index in 597 598 599 600 601 602; do
+  qorts -Xmx18000M QC \
+  --generatePlots \
+  --singleEnded \
+   SRR11849${index}.Aligned.sortedByCoord.out.bam \
+  /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev41.gtf  \
+  /athena/angsd/scratch/cnm4001/NPC_alignmentQC/SRR11849${index}_alignmentQC
+done
+
+
+#multiqc 
+srun -n1 --pty --partition=angsd_class --mem=4G bash -i
+cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC 
+mamba activate multiqc
+multiqc .
+
+#on local machine
+scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_alignmentQC/multiqc_report.html AlignmentQC_multiqc_report.html
+
+```
+![Qorts Alignments.](/Users/Caden/Desktop/angsd/project/Qorts_alignments.png)
+
+![Qorts Statistics.](/Users/Caden/Desktop/angsd/project/Qorts_statistics.png)
+![Qorts Splice loci.](/Users/Caden/Desktop/angsd/project/Qorts_splice_loci.png)
+![Qorts Splice events.](/Users/Caden/Desktop/angsd/project/Qorts_splice_events.png)
+![Qorts Strandedness.](/Users/Caden/Desktop/angsd/project/Qorts-strandedness.png)
+
+## Parameters: 
+1. STAR genomeGenerate: I used the latest hg38 genome downloaded from UCSC. For gtf file I used hg38 gencode V41 from UCSC table browser. I changed sjdbOverhang to read length - 1 = 49.
+2. STAR alignReads: I used the indexed genome I created and default parameters. 
+3. qorts QC: I used the --generate plots flag to automatically generate QC plots and the --singleEnded flag because my data is not paired end. 
+
+## Summary of Outcome:
+I am a little concerned with the phred scores being identical for every base in every read. The output from STAR seems to show that most of the reads uniquely mapped which seems promising. The alignment QC seems to show many reads having ambigous gene mapping, maybe that is because there is a large number of features in gencode annotation compared to refseq or UCSC. It does seem a little concerning to me and maybe could be addressed rerunning with new parameters. 
+
+*Note to self: Change overlap parameter from 1bp in feature counts since using gencode annotations with large number of features
+
