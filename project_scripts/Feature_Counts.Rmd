@@ -33,7 +33,7 @@ featureCounts -O -fraction \
 ## Read in feature counts
 ```{r}
 library(DESeq2)
-counts_matrix <- read.table("./project/NPC_combined_featureCounts.txt", header = TRUE, row.names = 1)
+counts_matrix <- read.table("/Users/Caden/Desktop/angsd/project/angsd_project/FeatureCounts/NPC_combined_featureCounts.txt", header = TRUE, row.names = 1)
 metadata<- read.csv("/Users/Caden/Downloads/SraRunTable-3.txt", header = TRUE)
 counts_matrix <- counts_matrix[,-(1:5)]
 new_sample_names <- c("Control_2", "Control_3", "Control_4", "GPE_2", "GPE_3", "GPE_4")
