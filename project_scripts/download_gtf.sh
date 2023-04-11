@@ -8,6 +8,6 @@
 #SBATCH --mem=8G
 
 cd /athena/angsd/scratch/cnm4001/hg38
-wget 'https://www.gencodegenes.org/human/' -O gencodev43.gtf.gz
+wget 'https://www.gencodegenes.org/human/' -O hg38.gencodev43.gtf.gz
 
 
