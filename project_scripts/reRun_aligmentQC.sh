@@ -9,6 +9,8 @@
 
 
 cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC
+mkdir ReRun_Qorts
+cd ReRun_Qorts
 for index in 597 598 599 600 601 602; do
   mkdir reRun_SRR11849${index}_alignmentQC
 done
@@ -22,7 +24,7 @@ for index in 597 598 599 600 601 602; do
   --singleEnded \
    SRR11849${index}.Aligned.sortedByCoord.out.bam \
   /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev43.gtf  \
-  /athena/angsd/scratch/cnm4001/NPC_alignmentQC/reRun_SRR11849${index}_alignmentQC
+  /athena/angsd/scratch/cnm4001/NPC_alignmentQC/ReRun_Qorts/reRun_SRR11849${index}_alignmentQC
 done
 
 
