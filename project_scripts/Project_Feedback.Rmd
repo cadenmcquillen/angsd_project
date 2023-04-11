@@ -1,0 +1,103 @@
+---
+title: "Project_Feedback"
+author: "Caden McQuillen"
+date: '2023-04-11'
+output: html_document
+---
+
+## Rerun FeatureCounts and Compare
+Rerunning featureCounts without -O flag but still same gtf file as before to compare.
+
+### ReRunning Feature Counts
+```{bash, eval = FALSE}
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=align_qc
+#SBATCH --time=00:30:00 # HH/MM/SS
+#SBATCH --mem=8G
+
+mamba activate angsd
+
+featureCounts -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev41.gtf \
+-o /athena/angsd/scratch/cnm4001/NPC_counts/NPC_combined_featureCounts.txt \
+/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849597.Aligned.sortedByCoord.out.bam /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849598.Aligned.sortedByCoord.out.bam
+/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849599.Aligned.sortedByCoord.out.bam
+/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849600.Aligned.sortedByCoord.out.bam
+/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849601.Aligned.sortedByCoord.out.bam
+/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849602.Aligned.sortedByCoord.out.bam
+```
+
+### Compare featureCounts results +/- -O flag
+```{r}
+old_counts_summary <- read.table("/Users/Caden/Desktop/angsd/project/angsd_project/FeatureCounts/NPC_combined_featureCounts.txt.summary", header = TRUE)
+
+new_counts_summary <- read.table("/Users/Caden/Desktop/angsd/project/angsd_project/FeatureCounts/reRun_NPC_combined_featureCounts.txt.summary", header = TRUE)
+colnames(old_counts_summary) <- c("Status", seq(1:6))
+colnames(new_counts_summary) <- c("Status", seq(1:6))
+
+#show only non-zero rows
+old_counts_summary[c(1,9,12,14), ]
+new_counts_summary[c(1,9,12,14), ]
+
+```
+Seems like featureCounts also has lots of ambiguous reads. I would guess its the gtf issue. 
+
+
+## Rerun Qorts
+
+### Download new gtf
+```{bash, eval=FALSE}
+
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=download
+#SBATCH --time=02:00:00 # HH/MM/SS
+#SBATCH --mem=8G
+
+cd /athena/angsd/scratch/cnm4001/hg38
+wget 'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz' -O hg38.gencodev43.gtf.gz
+
+
+```
+
+### Rerun Qorts with new gtf
+```{bash, eval=FALSE}
+#! /bin/bash -l
+
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --job-name=align_qc
+#SBATCH --time=03:00:00 # HH/MM/SS
+#SBATCH --mem=20G
+
+
+cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC
+mkdir ReRun_Qorts
+cd ReRun_Qorts
+
+for index in 597 598 599 600 601 602; do
+  mkdir reRun_SRR11849${index}_alignmentQC
+done
+
+cd /athena/angsd/scratch/cnm4001/NPC_bams
+mamba activate qorts
+
+for index in 597 598 599 600 601 602; do
+  qorts -Xmx18000M QC \
+  --generatePlots \
+  --singleEnded \
+   SRR11849${index}.Aligned.sortedByCoord.out.bam \
+  /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev43.gtf  \
+  /athena/angsd/scratch/cnm4001/NPC_alignmentQC/reRun_SRR11849${index}_alignmentQC
+done
+
+
+```
+

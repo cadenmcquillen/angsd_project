@@ -117,11 +117,17 @@ ylab = colnames(assay(DESeq.rlog[,2])) )
 
 
 
-#PCA Explorer
+## PCA Explorer
 ```{r}
 library(pcaExplorer)
 pcaExplorer(dds = DESeq.ds, dst = DESeq.rlog)
 ```
 ![PCA.](/Users/Caden/Desktop/angsd/project/PCA.pdf)
+
+
+## Highly Expressed Genes
+```{r}
+
+```
 
 
