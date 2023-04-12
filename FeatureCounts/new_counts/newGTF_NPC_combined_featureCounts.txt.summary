@@ -1,0 +1,15 @@
+Status	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849597.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849598.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849599.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849600.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849601.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/cnm4001/NPC_bams/SRR11849602.Aligned.sortedByCoord.out.bam
+Assigned	21347314	21655670	21627748	21783490	21977994	21565771
+Unassigned_Unmapped	0	0	0	0	0	0
+Unassigned_Read_Type	0	0	0	0	0	0
+Unassigned_Singleton	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0
+Unassigned_MultiMapping	20259038	18100320	18091774	17992087	17293837	18836084
+Unassigned_Secondary	0	0	0	0	0	0
+Unassigned_NonSplit	0	0	0	0	0	0
+Unassigned_NoFeatures	974318	1156493	792006	1006639	958471	899441
+Unassigned_Overlapping_Length	0	0	0	0	0	0
+Unassigned_Ambiguity	1875478	1826698	2042676	1897810	1887980	1978754
