@@ -1,0 +1,304 @@
+---
+title: "Differntial_expression"
+author: "Caden McQuillen"
+date: '2023-04-14'
+output:
+  html_document:
+    toc: yes
+---
+
+## Load DEseq object
+```{r}
+
+library(DESeq2)
+library(magrittr)
+
+#load DEseq object
+load("/Users/Caden/Desktop/angsd/project/angsd_project/DEseq/NPC_DEseq.RData")
+DESeq.ds
+```
+
+## DE Analysis
+
+### Run DE
+```{r}
+DESeq.ds %<>% DESeq()
+```
+
+### Check raw p value distrubtion 
+```{r}
+rowData(DESeq.ds)$WaldPvalue_condition_GPE_vs_Control %>%
+hist(breaks=19, main="Raw p-values for GPE vs Control")
+
+preOut_rawP <- rowData(DESeq.ds)$WaldPvalue_condition_GPE_vs_Control 
+```
+### Check logFC of significant genes
+```{r}
+DGE.results <- results(DESeq.ds, independentFiltering = TRUE, alpha = 0.05)
+head(DGE.results)
+summary(DGE.results)
+table(DGE.results$padj < 0.05)
+
+```
+
+### Check adjusted p value distrubtiuon
+```{r}
+DGE.results$padj %>%
+hist(breaks=19, main="Adjusted p-values for GPE vs Control")
+
+preOut_adjP <- DGE.results$padj
+```
+
+### Sort DEGs
+```{r}
+DGE.results.sorted <- DGE.results %>% `[`(order(.$padj),)
+head(DGE.results.sorted)
+```
+
+### Heatmap
+```{r}
+library(pheatmap)
+# identify genes with the desired adjusted p-value cut-off
+DGEgenes <- rownames(subset(DGE.results.sorted, padj < 0.05))
+rlog.dge <- DESeq.rlog[DGEgenes,] %>% assay
+pheatmap(rlog.dge, scale="row",
+show_rownames=FALSE, main="DGE (row-based z-score)")
+```
+
+### Volcano Plot
+```{r, fig.height=8}
+library(EnhancedVolcano)
+vp1 <- EnhancedVolcano(DGE.results,
+lab=rownames(DGE.results),
+x='log2FoldChange', y='padj',
+pCutoff=0.05,
+title="GPE / Control")
+print(vp1)
+```
+
+### Add gene names
+```{r}
+
+#Trim ensembl ids
+ensembl_ids <-rownames(DGE.results)
+fixed_names <- sapply(strsplit(ensembl_ids, ".", fixed=T), function(x) x[1])
+ensembl_ids_df <- data.frame(ensembl_ids, fixed_names)
+
+
+
+library(org.Hs.eg.db)
+human <- org.Hs.eg.db
+## examine what keytypes are available to query the database
+keytypes(human)
+
+annot.DGE <- select(human, keys=ensembl_ids_df$fixed_names,
+keytype="ENSEMBL" , columns="SYMBOL")
+colnames(annot.DGE) <- c("fixed_names", "SYMBOL")
+
+ensembl_ids_df <- merge(x=ensembl_ids_df,y=annot.DGE, 
+        by="fixed_names", all.x=TRUE)
+
+DGE.results.sorted$ensembl_ids <- rownames(DGE.results.sorted)
+DGE.results.sorted <- as.data.frame(DGE.results.sorted)
+DGE.results.sorted <- merge(x = DGE.results.sorted, y = ensembl_ids_df, by= "ensembl_ids", all.x=TRUE)
+DGE.results.sorted <- DGE.results.sorted[,-8]
+
+```
+### Pathway enrichment
+```{r}
+library(enrichR)
+websiteLive <- getOption("enrichR.live")
+if (websiteLive) {
+    listEnrichrSites()
+    setEnrichrSite("Enrichr") # Human genes   
+}
+dbs <- listEnrichrDbs()
+
+sig_DEGs <- subset(DGE.results.sorted, padj < 0.05)
+sig_upRegulated_DEGs <- subset(sig_DEGs, log2FoldChange > 0)
+sig_downRegulated_DEGs <- subset(sig_DEGs, log2FoldChange < 0)
+
+upReg_pathways <- enrichr(as.vector(na.omit(sig_upRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
+upReg_pathways[["KEGG_2021_Human"]]
+```
+
+```{r}
+
+downReg_pathways <- enrichr(as.vector(na.omit(sig_downRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
+downReg_pathways[["KEGG_2021_Human"]]
+
+```
+
+```{r}
+
+plotEnrich(upReg_pathways[[1]], showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value")
+plotEnrich(downReg_pathways[[1]], showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value")
+```
+
+
+
+## Remove potential outlier and rerun DE Analysis
+
+### Run DE
+```{r}
+DESeq.noOut.ds <- DESeq.ds[,-3]
+DESeq.noOut.rlog <- DESeq.rlog[,-3]
+DESeq.noOut.ds %<>% DESeq()
+```
+
+
+### Check raw p value distrubtion 
+```{r}
+rowData(DESeq.noOut.ds)$WaldPvalue_condition_GPE_vs_Control %>%
+hist(breaks=19, main="Raw p-values for GPE vs Control")
+
+postOut_rawP <- rowData(DESeq.noOut.ds)$WaldPvalue_condition_GPE_vs_Control
+```
+### Check logFC of significant genes
+```{r}
+DGE.noOut.results <- results(DESeq.noOut.ds, independentFiltering = TRUE, alpha = 0.05)
+head(DGE.noOut.results)
+summary(DGE.noOut.results)
+table(DGE.noOut.results$padj < 0.05)
+
+```
+
+### Check adjusted p value distrubtiuon
+```{r}
+DGE.noOut.results$padj %>%
+hist(breaks=19, main="Adjusted p-values for GPE vs Control")
+
+postOut_adjP <- DGE.noOut.results$padj
+```
+
+### ggplot of pvalue distrubtions +/- outlier
+```{r}
+
+pvalue <- c(preOut_rawP, preOut_adjP, postOut_rawP, postOut_adjP)
+Outlier <- c(rep("+Outlier", length(preOut_rawP)), rep("+Outlier", length(preOut_adjP)), rep("-Outlier", length(postOut_rawP)), rep("-Outlier", length(postOut_adjP)) )
+
+pval_type <- c(rep("raw", length(preOut_rawP)), rep("adj", length(preOut_adjP)), rep("raw", length(postOut_rawP)), rep("adj", length(postOut_adjP)) )
+                                                                                                    
+hist_df <- data.frame(pvalue, Outlier, pval_type)
+
+ggplot(hist_df, aes(x=pvalue, color=Outlier, fill = Outlier)) +
+  geom_histogram(alpha=0.5, position="identity") +
+  facet_grid(pval_type ~ .) + ggtitle("Pvalue Distribution +/- Outlier", )
+
+
+```
+
+
+
+### Sort DEGs
+```{r}
+DGE.noOut.results.sorted <- DGE.noOut.results %>% `[`(order(.$padj),)
+head(DGE.noOut.results.sorted)
+```
+
+### Heatmap
+```{r}
+library(pheatmap)
+# identify genes with the desired adjusted p-value cut-off
+DGE.noOut.genes <- rownames(subset(DGE.noOut.results.sorted, padj < 0.05))
+rlog.noOut.dge <- DESeq.noOut.rlog [DGE.noOut.genes ,] %>% assay
+pheatmap(rlog.noOut.dge , scale="row",
+show_rownames=FALSE, main="DGE (row-based z-score)")
+```
+
+## Volcano Plot
+```{r, fig.height=8}
+library(EnhancedVolcano)
+vp1 <- EnhancedVolcano(DGE.noOut.results,
+lab=rownames(DGE.noOut.results),
+x='log2FoldChange', y='padj',
+pCutoff=0.05,
+title="GPE / Control")
+print(vp1)
+```
+
+### Add gene names
+```{r}
+
+#Trim ensembl ids
+ensembl_noOut_ids <-rownames(DGE.noOut.results)
+fixed_noOut_names <- sapply(strsplit(ensembl_noOut_ids, ".", fixed=T), function(x) x[1])
+ensembl_noOut_ids_df <- data.frame(ensembl_noOut_ids, fixed_noOut_names)
+
+
+
+library(org.Hs.eg.db)
+human <- org.Hs.eg.db
+## examine what keytypes are available to query the database
+keytypes(human)
+
+annot.noOut.DGE <- select(human, keys=ensembl_noOut_ids_df$fixed_noOut_names,
+keytype="ENSEMBL" , columns="SYMBOL")
+colnames(annot.noOut.DGE) <- c("fixed_noOut_names", "SYMBOL")
+
+ensembl_noOut_ids_df <- merge(x=ensembl_noOut_ids_df,y=annot.noOut.DGE, 
+        by="fixed_noOut_names", all.x=TRUE)
+colnames(ensembl_noOut_ids_df)[2] <- "ensembl_ids"
+
+DGE.noOut.results.sorted$ensembl_ids <- rownames(DGE.noOut.results.sorted)
+DGE.noOut.results.sorted <- as.data.frame(DGE.noOut.results.sorted)
+DGE.noOut.results.sorted <- merge(x = DGE.noOut.results.sorted, y = ensembl_noOut_ids_df, by= "ensembl_ids", all.x=TRUE)
+DGE.noOut.results.sorted <- DGE.noOut.results.sorted[,-8]
+
+```
+
+### Replot Volcano Plot with gene names
+```{r, fig.height=8}
+library(EnhancedVolcano)
+vp1 <- EnhancedVolcano(DGE.noOut.results.sorted,
+lab= DGE.noOut.results.sorted$SYMBOL,
+x='log2FoldChange', y='padj',
+pCutoff=0.05,
+title="GPE / Control")
+print(vp1)
+```
+
+
+### Pathway enrichment
+```{r}
+library(enrichR)
+websiteLive <- getOption("enrichR.live")
+if (websiteLive) {
+    listEnrichrSites()
+    setEnrichrSite("Enrichr") # Human genes   
+}
+dbs <- listEnrichrDbs()
+
+sig_noOut_DEGs <- subset(DGE.noOut.results.sorted, padj < 0.05)
+sig_noOut_upRegulated_DEGs <- subset(sig_noOut_DEGs, log2FoldChange > 0)
+sig_noOut_downRegulated_DEGs <- subset(sig_noOut_DEGs, log2FoldChange < 0)
+
+upReg_noOut_pathways <- enrichr(as.vector(na.omit(sig_noOut_upRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
+upReg_noOut_pathways[["KEGG_2021_Human"]]
+```
+
+```{r}
+
+downReg_noOut_pathways <- enrichr(as.vector(na.omit(sig_noOut_downRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
+downReg_noOut_pathways[["KEGG_2021_Human"]]
+
+```
+
+### plot pathways
+```{r}
+library(cowplot)
+upregulated_plot <- plotEnrich(upReg_noOut_pathways[[1]], showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value", title = "Upregulated Pathways")
+downregulated_plot <- plotEnrich(downReg_noOut_pathways[[1]], showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value", , title = "Downregulated Pathways")
+combined_plot <- plot_grid(upregulated_plot, downregulated_plot, labels = c('A', 'B'))
+
+ggsave(
+  "Pathway_enrichment.png",
+  combined_plot ,
+  width = 12,
+  height = 5,
+  units = "in",
+  dpi = 300
+)
+
+```
+
