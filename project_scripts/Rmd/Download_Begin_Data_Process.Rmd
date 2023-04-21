@@ -17,7 +17,10 @@ output:
 6. Cell line: Nasopharyngeal Carcinoma cells derived from tumors of Chinese patients (NPC)
 7. Sequencing platform:  BGISEQ-500 system by Tri-I Biotech
 
+
+
 ## Download Fastq files
+Fastq files were downloaded remotely and stored on the cluster. These files will be needed for further memory intensive analysis where a high performance cluster is required.
 ```{bash, eval = FALSE}
 
 #On cluster
@@ -46,8 +49,7 @@ while read ID; do
 done < SRR_ACC_List.txt
 ```
 
-fastqc and multiqc
-
+fastqc is run to assess the quality of the fastq files and multiqc is used to aggregate all the sample's output into a concise format. This is a necessary quality check to make sure the reads are high quality before performing any downstream analysis. We can see that these fastq files pass all of the QC checks except for two: "Per base sequence quality" and "Seuquence Duplication". Further examination shows that these are both picking up on uneven distribution of bases within the first 12 bps of the reads. This may be caused by certain fragmentation protocols and shouldn't cause any adverse effect during downstream analysis. 
 ```{bash, eval = FALSE}
 
 #fastqc script
@@ -104,7 +106,7 @@ Does not appear to be an issue with downloading the fastq files but something od
 
 ## Index and Align
 
-Download human genome
+Download human genome to cluster due to large file size and is also needed as input for future analysis. 
 ```{bash, eval=FALSE}
 
 cd /athena/angsd/scratch/cnm4001
@@ -134,7 +136,8 @@ wget 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz' -
 gunzip hg38.fa.gz
 
 ```
-Index hg38 genome
+
+Index hg38 genome using STAR. The sjdbOverhang parameter tells STAR how many bases to concatenate from donor and acceptor sides of the junctions, we want the maximum possible overhang for our reads therefore I set this parameter as readlength - 1  = 49. 
 ```{bash, eval=FALSE}
 
 #! /bin/bash -l
@@ -159,7 +162,7 @@ STAR --runMode genomeGenerate \
 
 ```
 
-Align fastq with STAR
+Align fastq with STAR. I set the output outSAMtype as BAM SortedByCoordinate in order to save space. We can still read our BAM files using samtools so it does not need to be in human readable SAM format. I also indexed the BAM files to quickly extract alignments. 
 ```{bash, eval = FALSE}
 
 #! /bin/bash -l
@@ -191,7 +194,7 @@ done
 
 ```
 
-Multiqc on STAR output
+Multiqc is run on the STAR output to aggregate into concise file. We can see that the majority of reads align to unique loci which is a sign of good quality. 
 ```{bash, eval = FALSE}
 srun -n1 --pty --partition=angsd_class --mem=4G bash -i
 cd /athena/angsd/scratch/cnm4001/NPC_bams
@@ -203,9 +206,9 @@ scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_bams/mul
 ```
 ![Multiqc Alignment Scores.](/Users/Caden/Desktop/angsd/project/STAR_alignment_scores.png)
 
-
-
 ## Alignment QC
+
+From the STAR output alone we don't know where the reads are aligning to, just that they are aligning to unique locations. Therefore I next run Qorts to perfom alignment QC. 
 ```{bash, eval=FALSE}
 cd /athena/angsd/scratch/cnm4001/
 mkdir NPC_alignmentQC

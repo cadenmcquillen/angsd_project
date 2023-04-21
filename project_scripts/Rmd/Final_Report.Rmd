@@ -8,15 +8,13 @@ output:
 ---
 
 ## Introduction
-Nasopharyngeal carcinoma (NPC) is a cancer affecting the upper part of the pharynx behind the throat and usually originates in squamous cells that line the nasopharynx. It is a very rare cancer in western countries but is an endemic in southern China, southeast Asia and north Africa (Wong et. al.). Additional risk factors such as exposure to Epstein-Barr virus and environmental carcinogens can greatly increase risk of incidence (Wong et. al.). In its early stage, NPC is highly curable and very responsive to radiotherapy (Lan et. al.). However due to initially vague symptoms and secluded location within the nasal cavity, many cases go undiagnosed until their later stages when NPC becomes less radiosensitive and harsher more toxic treatments like chemotherapy are also required (Lan et. al.). While the development of better diagnostic tools is paramount to increasing early detection and thus improving patient outcome, an crucial orthogonal aim is the advent of safe and effective therapies for late stage NPC. 
+Nasopharyngeal carcinoma (NPC) is a cancer affecting the upper part of the pharynx behind the throat and usually originates in squamous cells that line the nasopharynx. It is a very rare cancer in western countries but is an endemic in southern China, southeast Asia and north Africa (Wong et. al., 2021). Additional risk factors such as exposure to Epstein-Barr virus and environmental carcinogens can greatly increase risk of incidence (Wong et. al., 2021). In its early stage, NPC is highly curable and very responsive to radiotherapy (Lan et. al., 2020). However due to initially vague symptoms and secluded location within the nasal cavity, many cases go undiagnosed until their later stages when NPC becomes less radiosensitive and harsher more toxic treatments like chemotherapy are also required (Lan et. al., 2020). While the development of better diagnostic tools is paramount to increasing early detection and thus improving patient outcome, an crucial orthogonal aim is the advent of safe and effective therapies for late stage NPC. 
 
-Advancements in bio-engineering nanoparticles such as Graphene have allowed for targeted drug delivery due to their large surface-to-volume ratio, hydrophobicity, and amenity for near-infrared (NIR) photoresponsiveness (Wang et. al). In particular, NIRs have the advantage of being noninvasive, easy to produce, and have high spatiotemporal resolution (Li et. al.). 
+Advancements in bio-engineering nanoparticles such as Graphene have allowed for targeted drug delivery due to their large surface-to-volume ratio, hydrophobicity, and amenity for near-infrared (NIR) photoresponsiveness (Wang et. al., 2020). Graphene also has the advantage of being pH-dependent meaning it will increase the release rate of the drug with increased pH levels. This is especially useful for uniquely targeting cancer cells, since many tumor cells have high metabolic activity thus consequently have more acidic intracellular pH. Therefore graphene based drug carriers can used to specifically target tumor cells. 
 
-Erlotinib is a tyrosine kinase inhibitor which acts on the epidermal growth factor receptor (EGFR). It has shown to be effective for treating locally advanced or metastatic non-small cell lung cancer (NSCLC) and pancreatic cancer, however its use in NPC is still currently unknown. Previous work has identified critical NPC molecular targets many of which are amenable to treatment with erlotinib (Lan et. al.). However, drug delivery and the unique targeting of the cancer cells remains a challenge due to location of NPC. Therefore, Erlotinib delivered via polyethylene glycol-coated graphene oxide (GO-PEG) may an effective treatment for late stage NPC. I aim to uncover the efficacy of GO-PEG-erlotinib in suppressing key NPC pathways in vitro using a reproducible bulk RNA-seq pipeline. 
-
+Erlotinib is a tyrosine kinase inhibitor which acts on the epidermal growth factor receptor (EGFR). It has shown to be effective for treating locally advanced or metastatic non-small cell lung cancer (NSCLC) and pancreatic cancer, however its use in NPC is still currently unknown. Previous work has identified critical NPC molecular targets many of which are amenable to treatment with erlotinib (Lan et. al., 2020). However, drug delivery and the unique targeting of the cancer cells remains a challenge due to location of NPC. Therefore, erlotinib delivered via polyethylene glycol-coated graphene oxide (GO-PEG) may an effective treatment for late stage NPC. I aim to uncover the efficacy of GO-PEG-erlotinib in suppressing key NPC pathways in vitro using a reproducible bulk RNA-seq pipeline. 
 
 ## Results
-
 
 ### BGISEQ fastq has identical phred scores
 The current gold standard for next generation short read sequencing is Illumina-based sequencers and many of the tools for downstream processing are optimized for Illumina data, thus when analyzing data from less frequently used sequencers like Beijing Genomics Institute (BGISEQ) further considerations need to be made. One particular example are the phred score in the fastq files generated by BGISEQ-500 (which uses phred+33 encoding) where the phred score for every base has an identical score of 30 or "?" (**Figure 1**). I could not find any evidence suggesting this is intended output generated by the standard BGISEQ protocol however, so I am not sure if this phenomena is unique to this data set or a consequence of BGISEQ data in general. Besides being unexpected result and limiting the usable information in the fastq files for quality control, I did not notice any adverse effects in downstream analysis. 
@@ -24,24 +22,24 @@ The current gold standard for next generation short read sequencing is Illumina-
 ![**Figure 1**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/Multiqc_perbase.png)
 
 ### Control 4 is an outlier sample
-The quality of the biological replicates is crucial to robust and reproducible results in RNA-seq analysis. In the original study, the authors make no mention of any quality control steps performed or any removal of potential outliers. However when processing the same data myself I found one control replicate that deviates significantly from both the other control replicates and GPE treated replicates in PCA space (**Figure 2**). We can see that PC1 accounts for 64.15% of the variance, however most of the variation seems to be due to Control 4. While the experimental conditions seem to separate on the range [-10, 2] of PC1 and [-10,10] on PC2, Control 4 has a PC1 coordinate of >20. Interestingly, it does still seem to sort of separate from the GPE condition along PC2. 
+The quality of the biological replicates is crucial to robust and reproducible results in RNA-seq analysis. In the original study, the authors make no mention of any quality control steps performed or any removal of potential outliers. However when processing the same data myself I found one control replicate that deviates significantly from both the other control replicates and GPE treated replicates in PCA space (**Figure 2**). We can see that PC1 accounts for 64.15% of the variance, however most of the variation seems to be due to Control 4. While the other samples seem to be contained on the range [-10, 2] of PC1 and [-10,10] on PC2, Control 4 has a PC1 coordinate of >20. Within the range of the non-Control 4 samples, the experimental conditions seem to separate along both PC1 and PC2. Interestingly, Control 4 does still seem to sort of separate from the GPE condition along PC2. 
 
 ![**Figure 2**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/newGTF_PCA.png)
 
-We can also observe this effect at the differential gene analysis level, with the p value distribution changing significantly with the removal of Control 4 (**Figure 3**). With the Control 4 sample included we get a distribution that skews towards the non-significant end and is reminiscent of a random distribution with little signal. When removing Control 4 sample that skews towards the significant end and is more reminiscent of the biological signal we would expect to see in a drug treated experiment. Therefore I chose to remove the Control 4 sample for downstream analysis. 
+We can also observe this effect at the differential gene analysis level, with the p value distribution changing significantly with the removal of Control 4 (**Figure 3**). With the Control 4 sample included we get a distribution that skews towards the non-significant end and is reminiscent of a random distribution with little signal. When removing the Control 4 sample we get a distribution that skews towards the significant end and is more reminiscent of the biological signal we would expect to see in a drug treated experiment. Therefore I chose to remove the Control 4 sample for downstream analysis. 
 
 ![**Figure 3**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/Pvalue_histogram_combo.png)
 
 ### GO-PEG-Erlotinib downregulates cancer phenotype in vitro
 
-After removing Control 4, differential gene analysis between GPE-treated and control was performed using DEseq2. Hierarchical clustering of the differential expressed genes (DEGs) shows that GPE-treatment results in a distinct transcriptional response in NPC cells (**Figure 4**). When examining the top individual DEGs we can see that there is some consistency between my results and the original study, in particular CHAC1 is the top up-regulated gene and KRCC1 is a top 3 upregulated gene by adjusted p-value in both analysis. ART1, SLC17A7, and NPTX1 were all top 10 down-regulated DEGs in both analyses as well, suggesting that some effects are robust across methods (**Figure 5**). However the is also considerable variability in the results of both analyses with many of the top 10 DEGs from their study not appearing in the top 25 of my analysis. Furthermore the total number of DEGs varied immensely between analyses with their total being 1455 DEGs with adjusted p-value < 0.05 and  $| log2 Fold Change | >= 2$ and mine being 205 without control 4 and 62 with control 4. This inconsistency between results was further exacerbated by the limited description of computational methods used and lack of code availability in the original study. 
+After removing Control 4, differential gene analysis between GPE-treated and control was performed using DEseq2. Hierarchical clustering of the differential expressed genes (DEGs) shows that GPE-treatment results in a distinct transcriptional response in NPC cells (**Figure 4**). When examining the top individual DEGs we can see that there is some consistency between my results and the original study, in particular *CHAC1* is the top up-regulated gene and *KRCC1* is a top 3 up-regulated gene by adjusted p-value in both analyses. *ART1*, *SLC17A7*, and *NPTX1* were all top 10 down-regulated DEGs in both analyses as well, suggesting that some effects are robust across methods (**Figure 5**). These top up-regulated genes have known anti-tumor function, in particular *CHAC1* has been shown to induce apoptosis and decrease cell proliferation in head and neck squamous cell cancer cell lines (Lan et. al., 2020). Conversely, *NPTX1* a top down-regulated gene in both analyses, has recently been associated with the progression of lung, pancreatic, and colon cancers (Lan et. al., 2020). However the is also considerable variability in the results of both analyses with many of the top 10 DEGs from their study not appearing in the top 25 of my analysis. Furthermore the total number of DEGs varied immensely between analyses with their total being 1455 DEGs with adjusted pvalue $< 0.05$ and  | log2 Fold Change | $>= 2$ and mine being 205 without control 4 and 62 with control 4. This inconsistency between results was further exacerbated by the limited description of computational methods used and lack of code availability in the original study. 
 
 
 ![**Figure 4**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/heatmap_outlier_removed.png)
 
 ![**Figure 5**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/volcano_with_genenames.png)
 
-To better characterize the cumulative biological effects of GPE treatment, I performed pathway enrichment analysis on the DEGs generated previously. We can see that with treatment of GPE, there is significant down regulation of cancer related pathways which may suggest GPE effectively suppresses crucial NPC functions (**Figure 6**). However these results should be interpreted with caution as we again see inconsistency between my results and the original study despite using the same pathway database (KEGG). This lack of consistency makes sense considering the enrichment of these pathways is based on the statistical overlap of the differential expressed genes with the curated gene sets in the database but should give less confidence to results that are not consistent between both analyses. 
+To better characterize the cumulative biological effects of GPE treatment, I performed pathway enrichment analysis on the DEGs generated previously. We can see that with treatment of GPE, there is significant down regulation of cancer related pathways such as *Proteoglycans in cancer*, *Pathways in cancer*, and *Small cell lung cancer* which may suggest GPE effectively suppresses crucial NPC functions (**Figure 6**). Furthermore, we can see down regulation of *MAPK signaling pathway* , *PI3K-Akt signaling pathway*, and *Ras signaling pathway* which are all pro-tumorigenic pathways that are downstream of the EGFR signaling pathway, the molecular target of erlotinib (Oda et. all, 2005). However these results should be interpreted with caution as we again see inconsistency between my results and the original study despite using the same pathway database (KEGG). This lack of consistency makes sense considering the enrichment of these pathways is based on the statistical overlap of the differential expressed genes with the curated gene sets in the database and therefore would mirror the inconsistency of the DEG analysis. However, this should give less confidence to results that are not consistent between both analyses. 
 
 ![**Figure 6**](/Users/Caden/Desktop/angsd/project/angsd_project/plots/new_plots/Pathway_enrichment.png)
 
@@ -49,9 +47,9 @@ To better characterize the cumulative biological effects of GPE treatment, I per
 
 ### Limitations and future directions
 
-The major limitation of this data set is the small number of replicates, while the recommend number of replicates is n >= 6 per condition this data only had n = 3 for GPE and n = 2 for Control after removal of outliers. Since there are many technical biases that can arise during RNA-seq library preparation an under powered data set may not be accurately sampling the true transcriptome. This was highlighted by considerable variation between control 4 and the other control replicates which should be fairly consistent given this is cell line data. The other obvious limitation of this data is in its potential translational impact given that this experiment was performed in vitro. It is unclear if the drug delivery system will be equally effective in an in vivo setting and effective drug delivery is one of the major challenges of NPC treatments. Even if the molecular pathways targeted by GPE are correct, the delivery efficacy in vivo is still undetermined. 
+The major limitation of this data set is the small number of replicates, while the recommend number of replicates is n >= 6 per condition this data only had n = 3 for GPE and n = 2 for Control after removal of outliers. Since there are many technical biases that can arise during RNA-seq library preparation an under powered data set may not be accurately sampling the true transcriptome. This was highlighted by considerable variation between control 4 and the other control replicates which should be fairly consistent given this is cell line data. The other obvious limitation of this data is in its potential translational impact given that this experiment was performed in vitro. It is unclear if the drug delivery system will be equally effective in an in vivo setting and effective drug delivery is one of the major challenges of NPC treatments. Even if the molecular pathways targeted by GPE are correct, the delivery efficacy in vivo is still undetermined. Lastly, since this is bulk RNA-seq data we do not know which cells specifically up took the drug or what percentage of the cells up took the drug. Earlier in the original study they florescent labeled GO-PEG to confirm intra-cellular uptake, but they don't mention adding florescence to GO-PEG-Erlotinib and they don't mention selecting cells by florescence when doing the RNA sequencing. Therefore we can't with 100% certainty directly link the transcriptional effects to the drug although it is likely the cause. 
 
-Due to the potentially under powered results I would suggest the first follow up experiment would be to perfom the in vitro study again but with greater number of replicates. I believe that while some of the results from this data set are promising, it needs to be reproduced in an identical experiment with larger sample size. If similar results are achieved then follow up in vivo studies which test the drug delivery efficacy would be needed, with the ultimate goal of clinical trials. 
+Due to the potentially under powered results I would suggest the first follow up experiment would be to perform the in vitro study again but with greater number of replicates. I believe that while some of the results from this data set are promising, it needs to be reproduced in an identical experiment with larger sample size. If similar results are achieved then follow up in vivo studies which test the drug delivery efficacy would be needed, with the ultimate goal of clinical trials. 
 
 
 ## Methods
@@ -60,66 +58,24 @@ Due to the potentially under powered results I would suggest the first follow up
 Fastq files were downloaded from SRA: SRP264795, GEO: GSM4568395 on _/__/____. 
 #### Download Fastq files
 ```{bash, eval = FALSE}
-
-#On cluster
-cd /athena/angsd/scratch/cnm4001
-mkdir NPC_fastq_data
-
-#On local machine copy files over to cluster
-scp /Users/Caden/Downloads/SRR_Acc_List.txt cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_fastq_data
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=download
-#SBATCH --time=06:00:00 # HH/MM/SS
-#SBATCH --mem=6G
-
-
-
-cd /athena/angsd/scratch/cnm4001/NPC_fastq_data
-
 while read ID; do
  wget "https://trace.ncbi.nlm.nih.gov/Traces/sra-reads-be/fastq?acc=${ID}" -O ${ID}.fastq.gz
-
 done < SRR_ACC_List.txt
 ```
 
 ### Fastq Quality Control
-Fastqc was run on each individual sample's fastq file and then aggregated using multiqc. Per base phred scores were identical (30) for every base in every read across all samples. Per base sequence content "failed" for 5/6 samples and "warned" however the bases in question were all within the first 12 bps. I believe this may be caused by library prep, in particular biased fragmented possibly due to using transposases which can bias at the start of reads. I don't believe it should adversely affect the downstream analysis. Additionally, sequence duplication also failed in 5/6 samples specifically at sequences centered around ">10 bps". I believe this is picking up the same issue as the per base sequence content and could possibly be a product of BGISEQ library prep. 
+Fastqc was run on each individual sample's fastq file and then aggregated using multiqc. Per base phred scores were identical (30) for every base in every read across all samples. Per base sequence content "failed" for 5/6 samples and "warned" 1/6 samples however the bases in question were all within the first 12 bps of the reads. I believe this may be caused by library preperation, in particular biased fragmented possibly due to using transposases which can bias the start of reads. I don't believe it should adversely affect the downstream analysis. Additionally, sequence duplication also failed in 5/6 samples specifically at sequences centered around ">10 bps". I believe this is picking up the same issue as the per base sequence content and could possibly be a product of BGISEQ library prep. 
 
 #### fastqc and multiqc
 ```{bash, eval = FALSE}
-
-#fastqc script
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes =1
-#SBATCH --ntasks =1
-#SBATCH --job -name=Fastqc
-#SBATCH --time =01:00:00 # HH/MM/SS
-#SBATCH --mem=6G
-
-
-cd /athena/angsd/scratch/cnm4001/NPC_fastq_data/
-mamba activate angsd
-
 for file in *; do
   fastqc $file --extract;
 done
-
 #On interactive session
 srun -n1 --pty --partition=angsd_class --mem=4G bash -i
 cd /athena/angsd/scratch/cnm4001/NPC_fastq_data
 mamba activate multiqc
 multiqc .
-
-#On local machine, copy html report from cluster to local machine
-scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_fastq_data/multiqc_report.html .
-
 ```
 
 ### Indexing Human Genome
@@ -129,42 +85,15 @@ To index the genome, I used STAR generate genome with the above fasta and "GTF" 
 
 #### Download human genome
 ```{bash, eval=FALSE}
-
-cd /athena/angsd/scratch/cnm4001
-mkdir hg38
 #On local copy over gtf file
 scp /Users/Caden/Downloads/hg38.gencodev41.gtf cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/hg38
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=download
-#SBATCH --time=02:00:00 # HH/MM/SS
-#SBATCH --mem=8G
-
-cd /athena/angsd/scratch/cnm4001/hg38
+#Download Genome to cluster
 wget 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz' -O hg38.fa.gz
-
 #STAR needs unzipped genome file
 gunzip hg38.fa.gz
 ```
 #### Index hg38 genome
 ```{bash, eval=FALSE}
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=index
-#SBATCH --time=6:00:00 # HH/MM/SS
-#SBATCH --mem=64G
-
-cd /athena/angsd/scratch/cnm4001/hg38
-mamba activate angsd
-
 STAR --runMode genomeGenerate \
   --runThreadN 1 \
   --genomeDir hg38_STARindex \
@@ -175,19 +104,8 @@ STAR --runMode genomeGenerate \
 
 #### Download new gtf
 ```{bash, eval=FALSE}
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=download
-#SBATCH --time=02:00:00 # HH/MM/SS
-#SBATCH --mem=8G
-
-cd /athena/angsd/scratch/cnm4001/hg38
+#Download new GTF
 wget 'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz' -O hg38.gencodev43.gtf.gz
-
 ```
 
 
@@ -196,23 +114,7 @@ To align the reads, I used STAR alignReads on each fastq file individually using
 
 #### Align fastq with STAR
 ```{bash, eval = FALSE}
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=Align
-#SBATCH --time=6:00:00 # HH/MM/SS
-#SBATCH --mem=30G
-
-cd /athena/angsd/scratch/cnm4001/
-mamba activate angsd
-
-
 for index in 597 598 599 600 601 602; do
-
-
   STAR --runMode alignReads \
     --runThreadN 1 \
     --genomeDir  hg38/hg38_STARindex \
@@ -223,7 +125,6 @@ for index in 597 598 599 600 601 602; do
     
   samtools index /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849${index}.Aligned.sortedByCoord.out.bam
 done
-
 ```
 
 #### Multiqc on STAR output
@@ -232,9 +133,6 @@ srun -n1 --pty --partition=angsd_class --mem=4G bash -i
 cd /athena/angsd/scratch/cnm4001/NPC_bams
 mamba activate multiqc
 multiqc .
-
-#on local machine
-scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_bams/multiqc_report.html  .
 ```
 
 ### Alignment QC
@@ -243,29 +141,6 @@ I reran Qorts using the exact same parameters but using this GTF instead and got
 
 #### Alignment QC (bad GTF)
 ```{bash, eval=FALSE}
-cd /athena/angsd/scratch/cnm4001/
-mkdir NPC_alignmentQC
-cd NPC_alignmentQC
-
-
-
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=align_qc
-#SBATCH --time=03:00:00 # HH/MM/SS
-#SBATCH --mem=20G
-
-cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC
-for index in 597 598 599 600 601 602; do
-  mkdir SRR11849${index}_alignmentQC
-done
-
-cd /athena/angsd/scratch/cnm4001/NPC_bams
-mamba activate qorts
-
 for index in 597 598 599 600 601 602; do
   qorts -Xmx18000M QC \
   --generatePlots \
@@ -275,41 +150,15 @@ for index in 597 598 599 600 601 602; do
   /athena/angsd/scratch/cnm4001/NPC_alignmentQC/SRR11849${index}_alignmentQC
 done
 
-
 #multiqc 
 srun -n1 --pty --partition=angsd_class --mem=4G bash -i
 cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC 
 mamba activate multiqc
 multiqc .
-
-#on local machine
-scp cnm4001@aphrodite.med.cornell.edu:/athena/angsd/scratch/cnm4001/NPC_alignmentQC/multiqc_report.html AlignmentQC_multiqc_report.html
-
 ```
 
 #### Rerun Qorts with new gtf
 ```{bash, eval=FALSE}
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=align_qc
-#SBATCH --time=03:00:00 # HH/MM/SS
-#SBATCH --mem=20G
-
-
-cd /athena/angsd/scratch/cnm4001/NPC_alignmentQC
-mkdir ReRun_Qorts
-cd ReRun_Qorts
-
-for index in 597 598 599 600 601 602; do
-  mkdir reRun_SRR11849${index}_alignmentQC
-done
-
-cd /athena/angsd/scratch/cnm4001/NPC_bams
-mamba activate qorts
-
 for index in 597 598 599 600 601 602; do
   qorts -Xmx18000M QC \
   --generatePlots \
@@ -331,17 +180,6 @@ After identifying that it was indeed the GTF file that was causing the issue, I 
 
 #### Feature Counts (Bad GTF, -O flag)
 ```{bash, eval = FALSE}
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=align_qc
-#SBATCH --time=00:30:00 # HH/MM/SS
-#SBATCH --mem=8G
-
-mamba activate angsd
-
 featureCounts -O -fraction \
 -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev41.gtf \
 -o /athena/angsd/scratch/cnm4001/NPC_counts/NPC_combined_featureCounts.txt \
@@ -354,17 +192,6 @@ featureCounts -O -fraction \
 
 #### Rerunning Feature Counts without -O flag
 ```{bash, eval = FALSE}
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=align_qc
-#SBATCH --time=00:30:00 # HH/MM/SS
-#SBATCH --mem=8G
-
-mamba activate angsd
-
 featureCounts -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev41.gtf \
 -o /athena/angsd/scratch/cnm4001/NPC_counts/NPC_combined_featureCounts.txt \
 /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849597.Aligned.sortedByCoord.out.bam /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849598.Aligned.sortedByCoord.out.bam
@@ -385,22 +212,10 @@ colnames(new_counts_summary) <- c("Status", seq(1:6))
 #show only non-zero rows
 old_counts_summary[c(1,9,12,14), ]
 new_counts_summary[c(1,9,12,14), ]
-
 ```
 
 #### Rerun featureCounts with new GTF
 ```{bash, eval=FALSE}
-#! /bin/bash -l
-
-#SBATCH --partition=angsd_class
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --job-name=align_qc
-#SBATCH --time=00:30:00 # HH/MM/SS
-#SBATCH --mem=8G
-
-mamba activate angsd
-
 featureCounts -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev43.gtf \
 -o /athena/angsd/scratch/cnm4001/NPC_counts/NPC_combined_featureCounts.txt \
 /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849597.Aligned.sortedByCoord.out.bam /athena/angsd/scratch/cnm4001/NPC_bams/SRR11849598.Aligned.sortedByCoord.out.bam
@@ -413,7 +228,7 @@ featureCounts -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev43.gtf \
 ### DEseq setup, preprocessing, and explorator analysis
 DEseq object was generated using the counts matrix generated by featureCounts. Genes with no reads were removed. Size factors were estimated using DEseq estimateSizeFactors().Log2 and Log2 normalized counts matrices were added to DEseq object. Within condition whole gene expression dot plots were generated using log2 normalized counts matrix to check for visual correlation between replicates. Within the GPE condition there was visually high correlation and within Control 2 and Control 3 there was also visually high correlation. Control 4 had noticeably worse visual correlation with its other replicates adding further evidence that it may be an outlier sample. Rlog DEseq object was generated using rlog(DESeq.ds, blind = FALSE), blind = FALSE parameter was chosen since I expected treating cancer cells with a drug to induce strong differences in many genes. PCA was generated using pcaExplorer(dds = DESeq.ds, dst = DESeq.rlog). Samples were colored by their condition. 
 
-#### Read in coutns matrix
+#### Read in counts matrix
 ```{r, message=FALSE}
 library(DESeq2)
 counts_matrix <- read.table("/Users/Caden/Desktop/angsd/project/angsd_project/FeatureCounts/new_counts/newGTF_NPC_combined_featureCounts.txt", header = TRUE, row.names = 1)
@@ -528,7 +343,7 @@ pcaExplorer(dds = DESeq.ds, dst = DESeq.rlog)
 save(DESeq.ds, DESeq.rlog, file = "NPC_DEseq.RData")
 ```
 
-### Differntial gene analaysis
+### Differential gene analaysis
 Differential gene analysis was performed using DESeq() on the previously generated DEseq object with default parameters (Wald test). Multiple testing correction and independent filter was performed using results(DESeq.ds, independentFiltering = TRUE, alpha = 0.05). Histograms of the raw and adjusted pvalues were generated using hist(). Due to the unexpected pvalue distribution with Control 4 included, I ran the same differential gene analysis with Control 4 removed and regenerated raw and adjusted pvalue histograms. The distribution looked much more like what I would have expected for a drug treated experiment so I decided to use the results with Control 4 removed for further downstream analysis. Stacked histograms plots for raw and adjusted pvalues with and without control 4 were generated using ggplot2's geom_histogram(). Heatmap of DEGs passing adjusted p value cutoff of 0.05 was generated using pheatmap(). DEGs used for input were rlog transformed and row-based z scored. Ensembl IDs were mapped to gene symbols using org.Hs.eg.db, in order to map ensembl IDs to their gene symbol if they have one, the versioning suffix (".[0-9]") was removed. Volcano plot was generated using EnhancedVolcano() with pCutoff=0.05 for adjusted pvalue and all other default parameters. 
 
 #### Load DEseq object
@@ -561,14 +376,12 @@ DGE.results <- results(DESeq.ds, independentFiltering = TRUE, alpha = 0.05)
 head(DGE.results)
 summary(DGE.results)
 table(DGE.results$padj < 0.05)
-
 ```
 
 #### Check adjusted p value distrubtion (with Control 4)
 ```{r, message=FALSE}
 DGE.results$padj %>%
 hist(breaks=19, main="Adjusted p-values for GPE vs Control")
-
 preOut_adjP <- DGE.results$padj
 ```
 
@@ -584,7 +397,6 @@ DESeq.noOut.ds %<>% DESeq()
 ```{r, message=FALSE}
 rowData(DESeq.noOut.ds)$WaldPvalue_condition_GPE_vs_Control %>%
 hist(breaks=19, main="Raw p-values for GPE vs Control")
-
 postOut_rawP <- rowData(DESeq.noOut.ds)$WaldPvalue_condition_GPE_vs_Control
 ```
 
@@ -594,14 +406,12 @@ DGE.noOut.results <- results(DESeq.noOut.ds, independentFiltering = TRUE, alpha 
 head(DGE.noOut.results)
 summary(DGE.noOut.results)
 table(DGE.noOut.results$padj < 0.05)
-
 ```
 
 #### Check adjusted p value distrubtion (without Control 4)
 ```{r, message=FALSE}
 DGE.noOut.results$padj %>%
 hist(breaks=19, main="Adjusted p-values for GPE vs Control")
-
 postOut_adjP <- DGE.noOut.results$padj
 ```
 
@@ -678,7 +488,7 @@ print(vp1)
 ```
 
 ### Pathway enrichment
-Pathway enrichment was performed using enrichR. DEG input was separated into up and downregulated and KEGG_2021 database was used. Plots were generated using plotEnrich with showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value". 
+Pathway enrichment was performed using enrichR. Due to the limited number of DEGs passing both adjusted pvalue and log2 Fold Change thresholds, DEGs passing just an adjusted pvalue threshold of 0.05 separated into up and down regulated genes were used input and KEGG_2021 database was used. Plots were generated using plotEnrich with showTerms = 15, numChar = 40, y = "Count", orderBy = "Adjusted.P.value". 
 
 #### EnrichR
 ```{r, message=FALSE}
@@ -699,13 +509,11 @@ sig_noOut_downRegulated_DEGs <- subset(sig_noOut_DEGs, log2FoldChange < 0)
 ```{r, message=FALSE}
 #pathway enrichment on upreg
 upReg_noOut_pathways <- enrichr(as.vector(na.omit(sig_noOut_upRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
-
 ```
 
 ```{r, message=FALSE}
 #pathway enrichment on downreg
 downReg_noOut_pathways <- enrichr(as.vector(na.omit(sig_noOut_downRegulated_DEGs$SYMBOL)), "KEGG_2021_Human")
-
 ```
 
 #### plot pathways
@@ -727,12 +535,27 @@ ggsave(
 )
 ```
 
+
+## Discussion
+The first issue that I encountered was that my data was generated by BGISEQ and not Illumina. Furthermore the authors of the original paper only provided sparse descriptions of the library preparation and computational methods used in processing the RNA-seq. I did not know if my data was ribo-depleted or poly-A selected and they only provided a reference to DNA-seq protocol for BGISEQ. I had to do some extra reading on BGISEQ to learn if there were any major differences from Illumina that require different approaches. From what I can tell however, there isn't that much of a difference from an analysis formatting perspective besides the oddity of the identical phred scores (which I'm still not sure what the cause is but I think its a dataset-specific thing and not a BGISEQ specific thing). I was also able to figure out some on the library preparation information from examining the reads in IGV.
+
+The next issue that I had was the majority of my reads were mapping to "ambiguous" genes. I wasn't sure if this was a artifact of parameters I had chosen, an issue with the library prep or sequencing before I even got the data, a GTF that had too many features, or if it was "real". I went down a rabbit hole of trying to address it with featureCounts by using -O flag but after downloading a new GTF at Merv's suggestion I discovered that it was just an issue with the GTF file I was using and not my data itself. 
+
+After getting a decent number of unique assigned reads from featureCounts for every sample, I then proceeded to exploratory analysis of the data in R. This is where I encountered my next issue which was the number of replicates per condition was on the low side and one of the control samples seemed to be an outlier. Consequently when I performed differential gene analysis, there was not as much of a transcriptional difference between conditions as I would have expected or compared to the results of the original study. Because this control sample seemed so much different that its other replicates I decided to remove it however this meant my results would be even more under powered. 
+
+Lastly, besides the lack of power in the data, it is also bulk RNA seq so we don't know if the transcriptional effect we see in the drug treated group is similar across every cell or if its being driven by a subset of cells. This limitation is further amplified by the fact that the drug is being administered by a novel drug delivery system so and I don't believe they had any readout for which cells successful got the drug when they did the RNA-seq experiment. Had this been single cell data, we would at least know if the distribution of the effect across the drug treated cells. These two limitations of the data could be addressed by a follow up study with larger sample size and possibly scRNA-seq rather than bulk or at least some readout that can confirm the efficacy of the drug delivery in vitro. 
+
+
+### Datset Table
+
+
 ## Citations
 
 1) Lan MY, Hsu YB, Lan MC, Chen JP, Lu YJ. Polyethylene Glycol-Coated Graphene Oxide Loaded with Erlotinib as an Effective Therapeutic Agent for Treating Nasopharyngeal Cancer Cells. Int J Nanomedicine. 2020 Oct 7;15:7569-7582. 
 2) Li D, Zhang W, Yu X, Wang Z, Su Z, Wei G. When biomolecules meet graphene: from molecular level interactions to material design and applications. Nanoscale. 2016 Dec 1;8(47):19491-19509. doi: 10.1039/c6nr07249f.
-3) Wang, X., Xuan, Z., Zhu, X. et al. Near-infrared photoresponsive drug delivery nanosystems for cancer photo-chemotherapy. J Nanobiotechnol 18, 108 (2020).
-4) Wong, K.C.W., Hui, E.P., Lo, KW. et al. Nasopharyngeal carcinoma: an evolving paradigm. Nat Rev Clin Oncol 18, 679–695 (2021).
+3) Oda K, Matsuoka Y, Funahashi A, Kitano H. A comprehensive pathway map of epidermal growth factor receptor signaling. Mol Syst Biol. 2005;1:2005.0010.
+4) Wang, X., Xuan, Z., Zhu, X. et al. Near-infrared photoresponsive drug delivery nanosystems for cancer photo-chemotherapy. J Nanobiotechnol 18, 108 (2020).
+5) Wong, K.C.W., Hui, E.P., Lo, KW. et al. Nasopharyngeal carcinoma: an evolving paradigm. Nat Rev Clin Oncol 18, 679–695 (2021).
 
 
 
