@@ -26,7 +26,7 @@ Rmarkdown files located at ` ./angsd_project/project_scripts/Rmd `
   2. ` Visualizing_Alignments.Rmd `
 - ##### R based downstream analysis
   3. ` Feature_Counts.Rmd `
-  4.` Project_Feddback.Rmd `
+  4. ` Project_Feddback.Rmd `
   5. ` Differential_expression.Rmd `
 - ##### Cumulative report
   6. ` Final_Report.Rmd `
