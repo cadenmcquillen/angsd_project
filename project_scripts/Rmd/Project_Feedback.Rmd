@@ -50,6 +50,7 @@ Seems like featureCounts also has lots of ambiguous reads. I would guess its the
 
 ## Rerun Qorts
 
+Rerunning Qorts with an updated GTF file to see if that changes the read mapping distribution. 
 ### Download new gtf
 ```{bash, eval=FALSE}
 
@@ -109,6 +110,7 @@ done
 It appears that the gtf was the issue since rerunning Qorts with new gtf has majority of reads uniquly aligning. 
 
 ## Rerun featureCounts with new gtf
+Since the output from Qorts seems to improve with the new GTF, I will rerun feature counts with the updated GTFs file. 
 ```{bash, eval=FALSE}
 #! /bin/bash -l
 
@@ -131,6 +133,7 @@ featureCounts -a /athena/angsd/scratch/cnm4001/hg38/hg38.gencodev43.gtf \
 ```
 
 ### Read in new feature counts
+Next I will perform the same exploratory analysis in R as before but with the updated counts matrix generated with the new GTF file. 
 ```{r}
 library(DESeq2)
 counts_matrix <- read.table("/Users/Caden/Desktop/angsd/project/angsd_project/FeatureCounts/new_counts/newGTF_NPC_combined_featureCounts.txt", header = TRUE, row.names = 1)
