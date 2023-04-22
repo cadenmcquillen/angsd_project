@@ -5,31 +5,31 @@
 #### Shell Scripts
 Pipeline from fastq file to count matrix. Scripts located at ` ./angsd_project/project_scripts/Shell_scripts `
 - ##### Data Download
-* ` download_fastq.sh `
-* ` download_genome.sh `
-* ` download_gtf.sh `
+  1. ` download_fastq.sh `
+  2. ` download_genome.sh `
+  3. ` download_gtf.sh `
 - ##### Fastq QC
-* ` fastqc.sh `
+  4. ` fastqc.sh `
 - ##### Genome indexing and alginment
-* ` index_star.sh `
-* ` align_STAR.sh `
-* ` index_alignments.sh `
+  5. ` index_star.sh `
+  6. ` align_STAR.sh `
+  7. ` index_alignments.sh `
 - ##### Alignment QC
-* ` alignmentQC.sh `
-* (optional) ` reRun_alignmentQC.sh `
+  8. ` alignmentQC.sh `
+  9. (optional) ` reRun_alignmentQC.sh `
 - ##### Feature Counts
-* ` featureCounts.sh `
-* (optional) ` reRun_featureCounts.sh `
+  10. ` featureCounts.sh `
+  11. (optional) ` reRun_featureCounts.sh `
 
 #### Rmds
 Rmarkdown files located at ` ./angsd_project/project_scripts/Rmd `
 - ##### Shell script documentation
-* ` Download_Begin_Data_Process.Rmd `
-* ` Visualizing_Alignments.Rmd `
+  1. ` Download_Begin_Data_Process.Rmd `
+  2. ` Visualizing_Alignments.Rmd `
 - ##### R based downstream analysis
-* ` Feature_Counts.Rmd `
-* ` Project_Feddback.Rmd `
-* ` Differential_expression.Rmd `
+  3. ` Feature_Counts.Rmd `
+  4.` Project_Feddback.Rmd `
+  5. ` Differential_expression.Rmd `
 - ##### Cumulative report
-* ` Final_Report.Rmd `
+  6. ` Final_Report.Rmd `
 
