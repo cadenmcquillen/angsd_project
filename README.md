@@ -1,7 +1,5 @@
 ### Analysis of Next-Gen Sequencing Data Final Project Spring 2023
 
-#### Scripts
-
 #### Shell Scripts
 Pipeline from fastq file to count matrix. Scripts located at ` ./angsd_project/project_scripts/Shell_scripts `
 - ##### Data Download
