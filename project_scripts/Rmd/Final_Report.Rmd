@@ -1,5 +1,5 @@
 ---
-title: "Transcriptional effect of polyethylene glycol-coated graphene oxide-erlotinib in nasopharyngeal carcinoma cell lines"
+title: "Transcriptional response to polyethylene glycol-coated graphene oxide-erlotinib in nasopharyngeal carcinoma cell line"
 author: "Caden McQuillen"
 date: '2023-04-17'
 output:
